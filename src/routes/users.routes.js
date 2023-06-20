@@ -12,6 +12,7 @@ const usersRoutes = Router()
 // })
 
 usersRoutes.post("/", usersController.create)
+usersRoutes.get("/:id", usersController.show)
 
 module.exports = usersRoutes
 

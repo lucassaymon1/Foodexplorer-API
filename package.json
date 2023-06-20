@@ -5,14 +5,17 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "migrate": "knex migrate:latest"
   },
   "keywords": [],
   "author": "Lucas Saymon Oliveira de Aragão",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",
+    "knex": "^2.4.2",
     "sqlite": "^4.2.1",
     "sqlite3": "^5.1.6"
   },

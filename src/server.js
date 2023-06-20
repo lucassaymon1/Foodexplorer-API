@@ -1,8 +1,9 @@
+require("express-async-errors")
+
 const express = require("express")
 const routes = require("./routes")
 const AppError = require("./utils/AppError")
 const database = require("./database/sqlite")
-require("express-async-errors")
 
 const app = express()
 const PORT = 3333
