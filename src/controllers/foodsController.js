@@ -6,11 +6,47 @@ class FoodsController{
   // show all user foods
 
   async index(req, res){
-    const {user_id} = req.query
+    const {user_id, title, tags} = req.query
 
-    const userFoods = await knex("foods").where({user_id})
+    let foods
 
-    return res.json({...userFoods})
+    if (tags){
+      const filterTags = tags.split(",").map(tag => tag.trim())
+
+      foods = await knex("tags")
+      .join("foods")
+      .select([
+        "foods.id",
+        "foods.name",
+        "foods.user_id",
+        "foods.description",
+        "foods.price",
+        "foods.picture"
+      ])
+      .where("foods.user_id", user_id)
+      .whereLike("foods.name", `%${title}%`)
+      .whereIn("tags.name", filterTags)
+      .groupBy("foods.id")
+      .orderBy("foods.name")
+    }
+
+    else{
+      foods = await knex("foods")
+      .where({user_id})
+      .whereLike("foods.name", `%${title}%`)
+      .orderBy("food.name")
+    }
+
+    const userTags = await knex("tags").where({user_id})
+    const foodsWithTags = foods.map(food => {
+      const foodTags = userTags.filter(tag => tag.food_id === food.id)
+      return({
+        ...food,
+        tags: foodTags
+      })
+    })
+
+    return res.json(foodsWithTags)
 
   }
 
@@ -29,8 +65,8 @@ class FoodsController{
   // create food zone
 
   async create(req, res){
-    const {name, price, description} = req.body
-    const {user_id} = req.params
+    const {name, price, description, tags} = req.body
+    const {user_id} = req.query
 
     if(!name){
       throw new AppError("Digite um título para o prato.")
@@ -41,44 +77,96 @@ class FoodsController{
       
     }
 
-    const food_id = await knex("foods").insert({
+    
+    
+    const [food_id] = await knex("foods").insert({
       name,
       price: parseFloat(price),
       description,
       user_id
     })
+    
+    if(tags){
 
-    res.status(201).json({name, price, description, user_id})
+      const insertTags = tags.map(tag => {
+        return{
+          name: tag,
+          user_id,
+          food_id
+        }
+      })
+      await knex("tags").insert(insertTags)
+      const foodsWithTags = {
+        name,
+        price,
+        description,
+        user_id,
+        tags: insertTags
+      }
+    }
+
+
+
+    res.status(201).json()
 
   }
 
   // update an existent food
 
   async update(req, res){
-    const {id, user_id,} = req.query
+    const {id, user_id} = req.query
     const {name, price, description, tags} = req.body
+    console.log(name)
+    const loadTags = await knex("tags").where({food_id: id})
+    console.log(loadTags)
+    
+    const currentTags = loadTags.map(tag => {
+      return tag.name
+    })
 
-    const updateFood = await knex("foods").where({user_id: id}).first()
-    const updateTags = tags.map(name => {
+    console.log("tags enviadas:", tags)
+    console.log("currentTags:", currentTags)
+
+    const newTags = tags.filter(tag => !currentTags.includes(tag))
+    console.log("newTags:", newTags)
+    const obsoleteTags = currentTags.filter(tag => !tags.includes(tag))
+    console.log("obsoleteTags:", obsoleteTags)
+
+    const tagsInsert = newTags.map( name => {
       return{
         name,
         user_id,
         food_id: id
       }
     })
+    
 
-    food.name = name ?? food.name
-    food.description = description ?? food.description
-    food.price = price ?? food.price
+    const updatedFood = await knex("foods").where({id}).first()
+    
+    // adicionar tratamento de tags - melhorar o fornecimento, mostrar em ordem alfabética, configurar para tags não se repetirem
+    // fazer com que tags não sejam excluidas de todas os pratos caso sejam atualizadas
+    updatedFood.name = name ?? updatedFood.name
+    updatedFood.description = description ?? updatedFood.description
+    updatedFood.price = price ?? updatedFood.price
+    console.log(updatedFood.updated_at)
+    
+    
+    await knex("foods").update(updatedFood).where({id})
 
+    if(obsoleteTags.length >= 1){
+      await knex("tags").where({food_id: id}).whereIn("name", obsoleteTags).delete()
+    }
 
-    await knex("foods").update(updateFood).where({id})
-    await knex("tags").where({food_id: id}).delete()
-    await knex("tags").insert(updateTags).where({food_id: id})
+    if(newTags.length >= 1){
+      await knex("tags").insert(tagsInsert)
+    }
+    const updatedTags = await knex("tags").where({food_id: id})
+    
+    console.log("afterUpdate: ", updatedTags)
 
     return res.json({
-      ...updateFood,
-      ...updateTags
+      ...updatedFood,
+      ...updatedTags
     })
 
   }
