@@ -1,12 +1,12 @@
-const knex = require("../database/knex")
+const knex = require('../database/knex')
 
-class TagsController{
-  async index(req, res){
-    const {user_id} = req.query
+class TagsController {
+	async index(req, res) {
+		const { food_id } = req.query
 
-    const tags = await knex("tags").where({user_id}).first()
-    res.json({...tags})
-  }
+		const tags = await knex('tags').where({ food_id }).first()
+		res.json({ ...tags })
+	}
 }
 
 module.exports = TagsController
