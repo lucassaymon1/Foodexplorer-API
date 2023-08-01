@@ -1,11 +1,10 @@
-const AppError = require("../utils/AppError")
-const {hash, compare} = require("bcrypt")
+const AppError = require('../utils/AppError')
+const { hash, compare } = require('bcrypt')
 // require database connection
-const knex = require("../database/knex")
+const knex = require('../database/knex')
 
-class UsersController{
-
-  /*
+class UsersController {
+	/*
    - Máximo 5 métodos por Controller
 
    * index: mostra todos os dados; - GET
@@ -15,60 +14,65 @@ class UsersController{
    * delete: deleta um dado existente; - DELETE
   */
 
-  async create(req, res){
-    const {name, email, password, isAdmin} = req.body
+	async create(req, res) {
+		const { name, email, password } = req.body
 
-    if(!name){ 
-      throw new AppError("O nome do usuário é obrigatório!")
-    }
+		if (!name) {
+			throw new AppError('O nome do usuário é obrigatório!')
+		}
 
-    // email verification
+		// email verification
 
-    
-    const emailStructure = /\S+@\S+\.\S+/
-    const emailValidation = emailStructure.test(email)
+		const emailStructure = /\S+@\S+\.\S+/
+		const emailValidation = emailStructure.test(email)
 
-    if(!emailValidation){
-      throw new AppError("Digite um email válido!")
-    }
+		if (!emailValidation) {
+			throw new AppError('Digite um email válido!')
+		}
 
-    const emailExists = await knex("users").where({email}).first()
-    
-    if(emailExists){
-      throw new AppError("Este email já está sendo utilizado.")
-    }
+		const emailExists = await knex('users').where({ email }).first()
 
+		if (emailExists) {
+			throw new AppError('Este email já está sendo utilizado.')
+		}
 
-    // hashing password
+		if (!password) {
+			throw new AppError('Insira uma senha para o usuário.')
+		}
 
-    const hashedPassword = await hash(password, 8)
+		if (password.length < 6) {
+			throw new AppError('A senha deve ter no mínimo 6 caracteres.')
+		}
 
-    const createUser = await knex("users").insert({
-      name,
-      email,
-      password: hashedPassword,
-      isAdmin
-    })
+		// hashing password
+		const hashedPassword = await hash(password, 8)
 
-    res.status(201).json({name, email, password})
-  }
+		const createUser = await knex('users').insert({
+			name,
+			email,
+			password: hashedPassword,
+			isAdmin: 0
+		})
 
-  async show(req, res){
-    const {id} = req.params
+		res.status(201).json({ name, email, password })
+	}
 
-    const user = await knex("users").where({id}).first()
-    if(!user){
-      throw new AppError("Usuário não existe")
-    }
+	async show(req, res) {
+		const { id } = req.params
 
-    res.json({
-      id,
-      name: user.name,
-      email: user.email,
-      password: user.password,
-      isAdmin: user.isAdmin === 1 ? true : false
-    })
-  }
+		const user = await knex('users').where({ id }).first()
+		if (!user) {
+			throw new AppError('Usuário não existe.')
+		}
+
+		res.json({
+			id,
+			name: user.name,
+			email: user.email,
+			password: user.password,
+			isAdmin: user.isAdmin === 1 ? true : false
+		})
+	}
 }
 
 module.exports = UsersController
