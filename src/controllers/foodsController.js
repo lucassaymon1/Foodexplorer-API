@@ -54,8 +54,10 @@ class FoodsController {
 
 	async index(req, res) {
 		const user_id = req.user.id
-
-		const user_foods = await knex('foods').where({ user_id })
+		if (!user_id) {
+			throw new AppError('usuário não autorizado.')
+		}
+		const user_foods = await knex('foods')
 
 		return res.json(user_foods)
 	}
@@ -64,7 +66,11 @@ class FoodsController {
 
 	async show(req, res) {
 		const { id } = req.params
+		const user_id = req.user.id
 
+		if (!user_id) {
+			throw new AppError('usuário não autorizado.')
+		}
 		const food = await knex('foods').where({ id }).first()
 		const foodTags = await knex('tags').where({ food_id: id }).orderBy('name')
 
@@ -77,13 +83,10 @@ class FoodsController {
 	// create food zone
 
 	async create(req, res) {
-		const { name, price, description, category, tags } = req.body
-		console.log(name, price, description, category, tags)
-		console.log(req.file.filename)
+		const { name, price, description, category, formTags } = req.body
 		const user_id = req.user.id
 		const pictureFilename = req.file.filename
-
-		console.log(pictureFilename)
+		const tags = formTags.split(',')
 
 		const diskStorage = new DiskStorage()
 
@@ -118,7 +121,7 @@ class FoodsController {
 					food_id
 				}
 			})
-			await knex('tags').insert(insertTags)
+			insertTags ?? (await knex('tags').insert(insertTags))
 			const foodsWithTags = {
 				name,
 				price,
@@ -134,31 +137,40 @@ class FoodsController {
 	// update an existent food
 
 	async update(req, res) {
-		const { id, user_id } = req.query
+		const { id } = req.params
+		const user_id = req.user.id
 		const { name, price, description, category, tags } = req.body
-		console.log(name)
-		const loadTags = await knex('tags').where({ food_id: id })
-		console.log(loadTags)
 
-		const currentTags = loadTags.map((tag) => {
-			return tag.name
-		})
+		if (tags) {
+			const loadTags = await knex('tags').where({ food_id: id })
 
-		console.log('tags enviadas:', tags)
-		console.log('currentTags:', currentTags)
+			const currentTags = loadTags.map((tag) => {
+				return tag.name
+			})
 
-		const newTags = tags.filter((tag) => !currentTags.includes(tag))
-		console.log('newTags:', newTags)
-		const obsoleteTags = currentTags.filter((tag) => !tags.includes(tag))
-		console.log('obsoleteTags:', obsoleteTags)
+			const newTags = tags.filter((tag) => !currentTags.includes(tag))
+			const obsoleteTags = currentTags.filter((tag) => !tags.includes(tag))
 
-		const tagsInsert = newTags.map((name) => {
-			return {
-				name,
-				user_id,
-				food_id: id
+			const tagsInsert = newTags.map((name) => {
+				return {
+					name,
+					user_id,
+					food_id: id
+				}
+			})
+
+			if (obsoleteTags.length >= 1) {
+				await knex('tags')
+					.where({ food_id: id })
+					.whereIn('name', obsoleteTags)
+					.delete()
 			}
-		})
+
+			if (newTags.length >= 1) {
+				await knex('tags').insert(tagsInsert)
+			}
+			const updatedTags = await knex('tags').where({ food_id: id })
+		}
 
 		const updatedFood = await knex('foods').where({ id }).first()
 
@@ -168,27 +180,12 @@ class FoodsController {
 		updatedFood.description = description ?? updatedFood.description
 		updatedFood.price = price ?? updatedFood.price
 		updatedFood.category = category ?? updatedFood.category
-		console.log(updatedFood.updated_at)
 
 		await knex('foods').update(updatedFood).where({ id })
 
-		if (obsoleteTags.length >= 1) {
-			await knex('tags')
-				.where({ food_id: id })
-				.whereIn('name', obsoleteTags)
-				.delete()
-		}
-
-		if (newTags.length >= 1) {
-			await knex('tags').insert(tagsInsert)
-		}
-		const updatedTags = await knex('tags').where({ food_id: id })
-
-		console.log('afterUpdate: ', updatedTags)
-
 		return res.json({
-			...updatedFood,
-			...updatedTags
+			...updatedFood
+			// ...updatedTags
 		})
 	}
 

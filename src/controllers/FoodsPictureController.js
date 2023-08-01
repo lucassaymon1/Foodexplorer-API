@@ -8,8 +8,6 @@ class FoodsPictureController {
 		const user_id = req.user.id
 		const { id } = req.params
 
-		console.log(id)
-
 		const diskStorage = new DiskStorage()
 
 		const user = await knex('users').where({ id: user_id }).first()
@@ -29,7 +27,7 @@ class FoodsPictureController {
 		const filename = await diskStorage.saveFile(avatarFilename)
 		food.picture = filename
 
-		await knex('users').update(food).where({ id })
+		await knex('foods').update(food).where({ id })
 
 		return res.json(food)
 	}

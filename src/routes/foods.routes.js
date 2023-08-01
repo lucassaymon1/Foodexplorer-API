@@ -2,6 +2,7 @@ const { Router } = require('express')
 const FoodsController = require('../controllers/FoodsController')
 const FoodsPictureController = require('../controllers/FoodsPictureController')
 const ensureAuthenticated = require('../middlewares/ensureAuthenticated')
+const ensureAdminUser = require('../middlewares/ensureAdminUser')
 
 const multer = require('multer')
 const uploadConfig = require('../configs/uploads')
@@ -16,11 +17,17 @@ foodsRoutes.use(ensureAuthenticated)
 
 foodsRoutes.get('/:id', foodsController.show)
 foodsRoutes.get('/', foodsController.index)
-foodsRoutes.post('/', upload.single('picture'), foodsController.create)
-foodsRoutes.put('/:id', foodsController.update)
-foodsRoutes.delete('/:id', foodsController.delete)
+foodsRoutes.post(
+	'/',
+	ensureAdminUser,
+	upload.single('picture'),
+	foodsController.create
+)
+foodsRoutes.put('/:id', ensureAdminUser, foodsController.update)
+foodsRoutes.delete('/:id', ensureAdminUser, foodsController.delete)
 foodsRoutes.patch(
 	'/picture/:id',
+	ensureAdminUser,
 	upload.single('picture'),
 	foodsPictureController.update
 )
