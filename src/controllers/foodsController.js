@@ -88,6 +88,8 @@ class FoodsController {
 		const pictureFilename = req.file.filename
 		const tags = formTags.split(',')
 
+		console.log(tags)
+
 		const diskStorage = new DiskStorage()
 
 		const filename = await diskStorage.saveFile(pictureFilename)
@@ -121,7 +123,7 @@ class FoodsController {
 					food_id
 				}
 			})
-			insertTags ?? (await knex('tags').insert(insertTags))
+			await knex('tags').insert(insertTags)
 			const foodsWithTags = {
 				name,
 				price,
