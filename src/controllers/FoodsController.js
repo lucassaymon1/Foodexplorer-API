@@ -195,6 +195,10 @@ class FoodsController {
 
 	async delete(req, res) {
 		const { id } = req.params
+		const diskStorage = new DiskStorage()
+
+		const food = await knex('foods').where({ id }).first()
+		await diskStorage.deleteFile(food.picture)
 
 		await knex('foods').where({ id }).delete()
 
