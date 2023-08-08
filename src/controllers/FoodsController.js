@@ -54,12 +54,22 @@ class FoodsController {
 
 	async index(req, res) {
 		const user_id = req.user.id
+		const { search } = req.query
+
 		if (!user_id) {
 			throw new AppError('usuário não autorizado.')
 		}
-		const user_foods = await knex('foods')
+		const foods = await knex('foods')
+			.whereLike('name', `%${search}%`)
+			.orderBy('name')
 
-		return res.json(user_foods)
+		// const tagsByName = await knex("tags").whereLike('name', `%${search}%`)
+
+		// const foodsByTags = await knex("foods").where({id: tagsByName.map(tag => tag.food_id)}).groupBy({id})
+
+		// const foods =
+
+		return res.json(foods)
 	}
 
 	//show a single user food
