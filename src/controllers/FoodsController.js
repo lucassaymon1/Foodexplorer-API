@@ -59,9 +59,7 @@ class FoodsController {
 		if (!user_id) {
 			throw new AppError('usuário não autorizado.')
 		}
-		const foods = await knex('foods')
-			.whereLike('name', `%${search}%`)
-			.orderBy('name')
+		const foods = await knex('foods').whereLike('foods.name', `%${search}%`)
 
 		// const tagsByName = await knex("tags").whereLike('name', `%${search}%`)
 
