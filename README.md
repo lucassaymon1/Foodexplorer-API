@@ -1,7 +1,9 @@
 # API da aplicação Food-Explorer
 
-Este projeto foi desenvolvido para ser uma API própria para a aplicação fornt-end: https://github.com/lucassaymon1/Food-Explorer-front
+Este projeto foi desenvolvido para ser uma API REST própria para a aplicação fornt-end: https://github.com/lucassaymon1/Food-Explorer-front
 Através desta aplicação, o front-end é capaz de realizar requisições para o servidor e assim criar, mostrar, alterar e excluir pratos que estão à venda em um site para restaurante.
+
+O deploy dessa API se encontra em: https://foodexplorer-api-ruvf.onrender.com
 
 ## Instruções para acessar o projeto
 
