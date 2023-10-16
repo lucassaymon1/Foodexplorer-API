@@ -13,7 +13,7 @@ const cors = require('cors')
 const app = express()
 app.use(
 	cors({
-		origin: 'https://foodexplorer-vacherin-303ff0.netlify.app'
+		origin: 'https://lsfoodexplorer.netlify.app'
 	})
 )
 
