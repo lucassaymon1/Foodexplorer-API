@@ -10,6 +10,8 @@ const uploadsConfig = require('../src/configs/uploads')
 
 const cors = require('cors')
 
+// test commit
+
 const app = express()
 app.use(
 	cors({
