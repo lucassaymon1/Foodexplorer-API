@@ -15,7 +15,7 @@ const cors = require('cors')
 const app = express()
 app.use(
 	cors({
-		origin: 'https://lsfoodexplorer.netlify.app'
+		origin: process.env.CORS_ORIGIN
 	})
 )
 
@@ -45,6 +45,7 @@ app.use((error, req, res, next) => {
 
 app.listen(PORT, () => {
 	console.log(`server is running at port ${PORT}`)
+	console.log(process.env.CORS_ORIGIN)
 })
 
 // app.get("/:username", (req, res) => {
